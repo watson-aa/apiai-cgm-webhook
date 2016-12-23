@@ -1,0 +1,7 @@
+{
+  "name": "CGM API.AI webhook",
+  "description": "Continuous Glucose Monitor API.AI webhook ",
+  "repository": "https://github.com/watson-aa/apiai-cgm-webhook",
+  "logo": "http://xvir.github.io/img/apiai.png",
+  "keywords": ["api.ai", "natural language"]
+}
