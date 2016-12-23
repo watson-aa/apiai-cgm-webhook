@@ -44,9 +44,10 @@ def processRequest(req):
     if entity is None:
         return {}
 
-    if entity == "sgv":
+    if entity == "sgvDir":
         cgmUrl = cgmUrl + "/sgv.json?count=1"
-    
+   
+    print cgmUrl 
     result = urllib.urlopen(cgmUrl).read()
     data = json.loads(result)
     res = makeWebhookResult(data, entity)
