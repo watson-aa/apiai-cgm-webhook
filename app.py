@@ -32,7 +32,7 @@ def processRequest(req):
     if req.get("result").get("action") != "cgm":
         return {}
     
-    parameters = req.get("parameters")
+    parameters = req.get("result").get("parameters")
     if parameters is None:
         return {}
 
