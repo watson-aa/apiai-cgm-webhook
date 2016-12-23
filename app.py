@@ -47,7 +47,6 @@ def processRequest(req):
     if entity == "sgv":
         cgmUrl = cgmUrl + "/sgv.json?count=1"
     
-    #cgmurl = "https://logancgm.azurewebsites.net/api/v1/entries/sgv.json?count=1"
     result = urllib.urlopen(cgmUrl).read()
     data = json.loads(result)
     res = makeWebhookResult(data, entity)
