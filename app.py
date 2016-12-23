@@ -29,16 +29,32 @@ def webhook():
 
 
 def processRequest(req):
-    if req.get("result").get("action") != "cgmSgvDirection":
+    if req.get("result").get("action") != "cgm":
         return {}
-    cgmurl = "https://logancgm.azurewebsites.net/api/v1/entries/sgv.json?count=1"
-    result = urllib.urlopen(cgmurl).read()
+    
+    parameters = req.get("parameters")
+    if parameters is None:
+        return {}
+
+    cgmUrl = parameters.get("cgmUrl")
+    if cgmUrl is None:
+        return {}
+
+    entity = parameters.get("entity")
+    if entity is None:
+        return {}
+
+    if entity == "sgv":
+        cgmUrl = cgmUrl + "/sgv.json?count=1"
+    
+    #cgmurl = "https://logancgm.azurewebsites.net/api/v1/entries/sgv.json?count=1"
+    result = urllib.urlopen(cgmUrl).read()
     data = json.loads(result)
-    res = makeWebhookResult(data)
+    res = makeWebhookResult(data, entity)
     return res
 
 
-def makeWebhookResult(data):
+def makeWebhookResult(data, entity):
     if len(data) == 0:
         return {}
     
