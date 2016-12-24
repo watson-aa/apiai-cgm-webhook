@@ -69,7 +69,7 @@ def CGMdirectionToNL(direction):
         'SingleUp': 'rising',
         'DoubleUp': 'rising rapidly',
         'Flat': 'flat'
-    }.get(direction, 'unknown')
+    }.get(direction, 'the direction is unknown')
 
 def getSgvDirSpeech(data):
     sgv = data[0].get('sgv')
