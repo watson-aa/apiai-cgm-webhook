@@ -3,6 +3,7 @@
 import urllib
 import json
 import os
+from dateutil.parser import parse
 
 from flask import Flask
 from flask import request
@@ -16,8 +17,8 @@ app = Flask(__name__)
 def webhook():
     req = request.get_json(silent=True, force=True)
 
-    print("Request:")
-    print(json.dumps(req, indent=4))
+    #print("Request:")
+    #print(json.dumps(req, indent=4))
 
     res = processRequest(req)
 
@@ -44,11 +45,18 @@ def processRequest(req):
     if entity is None:
         return {}
 
-    if entity == "sgvDir":
-        cgmUrl = cgmUrl + "/sgv.json?count=1"
+    cgmUrl = {
+        'sgv': cgmUrl + '/sgv.json?count=1',
+        'sgvDir': cgmUrl + '/sgv.json?count=1',
+        'mbg': cgmUrl + '/mbg.json?count=1'
+    }.get(entity, cgmUrl)
 
     result = urllib.urlopen(cgmUrl).read()
     data = json.loads(result)
+
+    #print("Response:")
+    #print(json.dumps(data, indent=4))
+
     res = makeWebhookResult(data, entity)
     return res
 
@@ -74,23 +82,28 @@ def getSgvDirSpeech(data):
 
     return 'Sensor glucose value is currently ' + str(sgv) + ' and ' + CGMdirectionToNL(direction) + '.'
 
+def getMbgSpeech(data):
+    mbg = data[0].get('mbg')
+    print 'MBG:' + str(mbg)
+    if mbg is None:
+        return ''
+
+    date = data[0].get('dateString')
+    if date is None:
+        return ''
+    date_obj = parse(date)
+    date_str = date_obj.strftime('%B %d at %I:%M%p')
+
+    return 'Mean blood glucose value was ' + str(mbg) + ' on ' + date_str + '.'
 
 def makeWebhookResult(data, entity):
     if len(data) == 0:
         return {}
 
-    sgv = data[0].get('sgv')
-    if sgv is None:
-        return {}
-
-    direction = data[0].get('direction')
-    if direction is None:
-        return {}
-
-    speech = ''
-    if entity == 'sgvDir':
-        speech = getSgvDirSpeech(data)
-
+    speech = {
+        'sgvDir': getSgvDirSpeech(data),
+        'mbg': getMbgSpeech(data)
+    }.get(entity, '')
     if speech == '':
         return {}
 
