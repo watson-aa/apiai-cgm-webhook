@@ -31,7 +31,7 @@ def webhook():
 def processRequest(req):
     if req.get("result").get("action") != "cgm":
         return {}
-    
+
     parameters = req.get("result").get("parameters")
     if parameters is None:
         return {}
@@ -46,18 +46,28 @@ def processRequest(req):
 
     if entity == "sgvDir":
         cgmUrl = cgmUrl + "/sgv.json?count=1"
-   
-    print cgmUrl 
+
+    print cgmUrl
     result = urllib.urlopen(cgmUrl).read()
     data = json.loads(result)
     res = makeWebhookResult(data, entity)
     return res
 
+def CGMdirectionToNL(direction):
+    return {
+        'SingleDown': 'dropping',
+        'DoubleDown': 'dropping rapidly',
+        'FortyFiveDown': 'dropping slightly',
+        'FortyFiveUp': 'rising slightly',
+        'SingleUp': 'rising',
+        'DoubleUp': 'rising rapidly',
+        'Flat': 'flat'
+    }.get(direction, 'unknown')
 
 def makeWebhookResult(data, entity):
     if len(data) == 0:
         return {}
-    
+
     sgv = data[0].get('sgv')
     if sgv is None:
         return {}
@@ -65,8 +75,8 @@ def makeWebhookResult(data, entity):
     direction = data[0].get('direction')
     if direction is None:
         return {}
-        
-    speech = "Sensor glucose value is currently " + str(sgv) + " with a direction of " + direction
+
+    speech = "Sensor glucose value is currently " + str(sgv) + " and " + CGMdirectionToNL(direction)
 
     print("Response:")
     print(speech)
