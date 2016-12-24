@@ -47,7 +47,6 @@ def processRequest(req):
     if entity == "sgvDir":
         cgmUrl = cgmUrl + "/sgv.json?count=1"
 
-    print cgmUrl
     result = urllib.urlopen(cgmUrl).read()
     data = json.loads(result)
     res = makeWebhookResult(data, entity)
@@ -64,6 +63,18 @@ def CGMdirectionToNL(direction):
         'Flat': 'flat'
     }.get(direction, 'unknown')
 
+def getSgvDirSpeech(data):
+    sgv = data[0].get('sgv')
+    if sgv is None:
+        return ''
+
+    direction = data[0].get('direction')
+    if direction is None:
+        return ''
+
+    return 'Sensor glucose value is currently ' + str(sgv) + ' and ' + CGMdirectionToNL(direction) + '.'
+
+
 def makeWebhookResult(data, entity):
     if len(data) == 0:
         return {}
@@ -76,16 +87,16 @@ def makeWebhookResult(data, entity):
     if direction is None:
         return {}
 
-    speech = "Sensor glucose value is currently " + str(sgv) + " and " + CGMdirectionToNL(direction)
+    speech = ''
+    if entity == 'sgvDir':
+        speech = getSgvDirSpeech(data)
 
-    print("Response:")
-    print(speech)
+    if speech == '':
+        return {}
 
     return {
         "speech": speech,
         "displayText": speech,
-        # "data": data,
-        # "contextOut": [],
         "source": "apiai-cgm-webhook"
     }
 
