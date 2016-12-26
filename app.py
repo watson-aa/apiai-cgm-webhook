@@ -4,7 +4,6 @@ import urllib
 import json
 import os
 import datetime
-import pytz
 
 from dateutil.parser import parse
 
@@ -103,11 +102,6 @@ def getSgvSpeech(data, withDirection=True):
 def getSgvOutliers(data, timezone):
     minSgv = {'value': 0, 'date': datetime.datetime.now()}
     maxSgv = {'value': 0, 'date': datetime.datetime.now()}
-
-    #timezone_obj = timezone(timezone)
-    #timezone_obj = gettz(timezone)
-    #add_default_tz = lambda x, tzinfo: x.replace(tzinfo=None)
-
 
     for d in data:
         tmpSvg = d.get('sgv')
