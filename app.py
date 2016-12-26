@@ -4,9 +4,9 @@ import urllib
 import json
 import os
 import datetime
+import pytz
 
 from dateutil.parser import parse
-from dateutil.tz import gettz
 
 from flask import Flask
 from flask import request
@@ -105,8 +105,8 @@ def getSgvOutliers(data, timezone):
     maxSgv = {'value': 0, 'date': datetime.datetime.now()}
 
     #timezone_obj = timezone(timezone)
-    timezone_obj = gettz(timezone)
-    add_default_tz = lambda x, tzinfo: x.replace(tzinfo=None)
+    #timezone_obj = gettz(timezone)
+    #add_default_tz = lambda x, tzinfo: x.replace(tzinfo=None)
 
 
     for d in data:
@@ -116,10 +116,10 @@ def getSgvOutliers(data, timezone):
             return ''
         if tmpSvg > maxSgv['value']:
             maxSgv['value'] = tmpSvg
-            maxSgv['date'] = add_default_tz(parse(tmpDate), timezone_obj)
+            maxSgv['date'] = parse(tmpDate).astimezone(pytz.utc)
         if tmpSvg < minSgv['value'] or minSgv['value'] == 0:
             minSgv['value'] = tmpSvg
-            maxSgv['date'] = add_default_tz(parse(tmpDate), timezone_obj)
+            maxSgv['date'] = parse(tmpDate).astimezone(pytz.utc)
 
     return (minSgv, maxSgv)
 
