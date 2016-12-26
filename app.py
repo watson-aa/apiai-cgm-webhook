@@ -6,6 +6,7 @@ import os
 import datetime
 
 from dateutil.parser import parse
+from dateutil.tz import gettz
 
 from flask import Flask
 from flask import request
@@ -47,6 +48,10 @@ def processRequest(req):
     if entity is None:
         return {}
 
+    timezone = parameters.get("timezone")
+    if timezone is None:
+        timezone = 'US/Eastern'
+
     today = datetime.datetime.now()
     yesterday = today - datetime.timedelta(days=1)
 
@@ -64,7 +69,7 @@ def processRequest(req):
     #print("Response:")
     #print(json.dumps(data, indent=4))
 
-    res = makeWebhookResult(data, entity)
+    res = makeWebhookResult(data, entity, timezone)
     return res
 
 def CGMdirectionToNL(direction):
@@ -95,9 +100,11 @@ def getSgvSpeech(data, withDirection=True):
 
     return speech
 
-def getSgvOutliers(data):
+def getSgvOutliers(data, timezone):
     minSgv = {'value': 0, 'date': datetime.datetime.now()}
     maxSgv = {'value': 0, 'date': datetime.datetime.now()}
+
+    #timezone_obj = timezone(timezone)
 
     for d in data:
         tmpSvg = d.get('sgv')
@@ -106,10 +113,10 @@ def getSgvOutliers(data):
             return ''
         if tmpSvg > maxSgv['value']:
             maxSgv['value'] = tmpSvg
-            maxSgv['date'] = parse(tmpDate)
+            maxSgv['date'] = parse(tmpDate, ignoretz=True)
         if tmpSvg < minSgv['value'] or minSgv['value'] == 0:
             minSgv['value'] = tmpSvg
-            maxSgv['date'] = parse(tmpDate)
+            maxSgv['date'] = parse(tmpDate, ignoretz=True)
 
     return (minSgv, maxSgv)
 
@@ -119,12 +126,12 @@ def getSgvDaySpeech(day, minSgv, maxSgv):
                 ', and the highest was ' + str(maxSgv['value']) +\
                 ' at ' + maxSgv['date'].strftime('%I:%M%p') + '.'
 
-def getSgvTodaySpeech(data):
-    minSgv, maxSgv = getSgvOutliers(data)
+def getSgvTodaySpeech(data, timezone):
+    minSgv, maxSgv = getSgvOutliers(data, timezone)
     return getSgvDaySpeech('Today', minSgv, maxSgv)
 
-def getSgvYesterdaySpeech(data):
-    minSgv, maxSgv = getSgvOutliers(data)
+def getSgvYesterdaySpeech(data, timezone):
+    minSgv, maxSgv = getSgvOutliers(data, timezone)
     return getSgvDaySpeech('Yesterday', minSgv, maxSgv)
 
 def getMbgSpeech(data):
@@ -141,7 +148,7 @@ def getMbgSpeech(data):
 
     return 'Mean blood glucose value was ' + str(mbg) + ' on ' + date_str + '.'
 
-def makeWebhookResult(data, entity):
+def makeWebhookResult(data, entity, timezone):
     if len(data) == 0:
         return {}
 
@@ -151,9 +158,9 @@ def makeWebhookResult(data, entity):
     elif entity == 'sgvDir':
         speech = getSgvSpeech(data, True)
     elif entity == 'sgvToday':
-        speech = getSgvTodaySpeech(data)
+        speech = getSgvTodaySpeech(data, timezone)
     elif entity == 'sgvYesterday':
-        speech = getSgvYesterdaySpeech(data)
+        speech = getSgvYesterdaySpeech(data, timezone)
     elif entity == 'mbg':
         speech = getMbgSpeech(data)
 
