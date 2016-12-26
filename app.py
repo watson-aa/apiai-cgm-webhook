@@ -105,6 +105,9 @@ def getSgvOutliers(data, timezone):
     maxSgv = {'value': 0, 'date': datetime.datetime.now()}
 
     #timezone_obj = timezone(timezone)
+    timezone_obj = gettz(timezone)
+    add_default_tz = lambda x, tzinfo: x.replace(tzinfo=x.tzinfo or tzinfo)
+
 
     for d in data:
         tmpSvg = d.get('sgv')
@@ -113,10 +116,10 @@ def getSgvOutliers(data, timezone):
             return ''
         if tmpSvg > maxSgv['value']:
             maxSgv['value'] = tmpSvg
-            maxSgv['date'] = parse(tmpDate, ignoretz=True)
+            maxSgv['date'] = add_default_tz(parse(tmpDate), timezone_obj)
         if tmpSvg < minSgv['value'] or minSgv['value'] == 0:
             minSgv['value'] = tmpSvg
-            maxSgv['date'] = parse(tmpDate, ignoretz=True)
+            maxSgv['date'] = add_default_tz(parse(tmpDate), timezone_obj)
 
     return (minSgv, maxSgv)
 
