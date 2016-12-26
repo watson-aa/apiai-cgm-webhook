@@ -47,10 +47,6 @@ def processRequest(req):
     if entity is None:
         return {}
 
-    timezone = parameters.get("timezone")
-    if timezone is None:
-        timezone = 'America/Chicago'
-
     today = datetime.datetime.now()
     yesterday = today - datetime.timedelta(days=1)
 
@@ -68,7 +64,7 @@ def processRequest(req):
     #print("Response:")
     #print(json.dumps(data, indent=4))
 
-    res = makeWebhookResult(data, entity, timezone)
+    res = makeWebhookResult(data, entity)
     return res
 
 def CGMdirectionToNL(direction):
@@ -99,7 +95,7 @@ def getSgvSpeech(data, withDirection=True):
 
     return speech
 
-def getSgvOutliers(data, timezone):
+def getSgvOutliers(data):
     minSgv = {'value': 0, 'date': datetime.datetime.now()}
     maxSgv = {'value': 0, 'date': datetime.datetime.now()}
 
@@ -123,12 +119,12 @@ def getSgvDaySpeech(day, minSgv, maxSgv):
                 ', and the highest was ' + str(maxSgv['value']) +\
                 ' at ' + maxSgv['date'].strftime('%I:%M%p') + '.'
 
-def getSgvTodaySpeech(data, timezone):
-    minSgv, maxSgv = getSgvOutliers(data, timezone)
+def getSgvTodaySpeech(data):
+    minSgv, maxSgv = getSgvOutliers(data)
     return getSgvDaySpeech('Today', minSgv, maxSgv)
 
-def getSgvYesterdaySpeech(data, timezone):
-    minSgv, maxSgv = getSgvOutliers(data, timezone)
+def getSgvYesterdaySpeech(data):
+    minSgv, maxSgv = getSgvOutliers(data)
     return getSgvDaySpeech('Yesterday', minSgv, maxSgv)
 
 def getMbgSpeech(data):
@@ -145,7 +141,7 @@ def getMbgSpeech(data):
 
     return 'Mean blood glucose value was ' + str(mbg) + ' on ' + date_str + '.'
 
-def makeWebhookResult(data, entity, timezone):
+def makeWebhookResult(data, entity):
     if len(data) == 0:
         return {}
 
@@ -155,9 +151,9 @@ def makeWebhookResult(data, entity, timezone):
     elif entity == 'sgvDir':
         speech = getSgvSpeech(data, True)
     elif entity == 'sgvToday':
-        speech = getSgvTodaySpeech(data, timezone)
+        speech = getSgvTodaySpeech(data)
     elif entity == 'sgvYesterday':
-        speech = getSgvYesterdaySpeech(data, timezone)
+        speech = getSgvYesterdaySpeech(data)
     elif entity == 'mbg':
         speech = getMbgSpeech(data)
 
