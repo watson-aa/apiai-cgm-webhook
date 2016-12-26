@@ -50,7 +50,7 @@ def processRequest(req):
 
     timezone = parameters.get("timezone")
     if timezone is None:
-        timezone = 'US/Eastern'
+        timezone = 'America/Chicago'
 
     today = datetime.datetime.now()
     yesterday = today - datetime.timedelta(days=1)
@@ -106,7 +106,7 @@ def getSgvOutliers(data, timezone):
 
     #timezone_obj = timezone(timezone)
     timezone_obj = gettz(timezone)
-    add_default_tz = lambda x, tzinfo: x.replace(tzinfo=x.tzinfo or tzinfo)
+    add_default_tz = lambda x, tzinfo: x.replace(tzinfo=None)
 
 
     for d in data:
