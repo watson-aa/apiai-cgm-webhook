@@ -116,10 +116,10 @@ def getSgvOutliers(data, timezone):
             return ''
         if tmpSvg > maxSgv['value']:
             maxSgv['value'] = tmpSvg
-            maxSgv['date'] = parse(tmpDate).astimezone(pytz.utc)
+            maxSgv['date'] = parse(tmpDate)
         if tmpSvg < minSgv['value'] or minSgv['value'] == 0:
             minSgv['value'] = tmpSvg
-            maxSgv['date'] = parse(tmpDate).astimezone(pytz.utc)
+            minSgv['date'] = parse(tmpDate)
 
     return (minSgv, maxSgv)
 
