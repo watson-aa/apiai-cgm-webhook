@@ -3,6 +3,8 @@
 import urllib
 import json
 import os
+import datetime
+
 from dateutil.parser import parse
 
 from flask import Flask
@@ -45,9 +47,14 @@ def processRequest(req):
     if entity is None:
         return {}
 
+    today = datetime.datetime.now()
+    yesterday = today - datetime.timedelta(days=1)
+
     cgmUrl = {
         'sgv': cgmUrl + '/sgv.json?count=1',
         'sgvDir': cgmUrl + '/sgv.json?count=1',
+        'sgvToday': cgmUrl + '/sgv.json?count=999&find[dateString][$gte]=' + today.strftime('%Y-%m-%d'),
+        'sgvYesterday': cgmUrl + '/sgv.json?count=999&find[dateString][$gte]=' + yesterday.strftime('%Y-%m-%d') + '&find[dateString][$lt]=' + today.strftime('%Y-%m-%d'),
         'mbg': cgmUrl + '/mbg.json?count=1'
     }.get(entity, cgmUrl)
 
@@ -71,7 +78,7 @@ def CGMdirectionToNL(direction):
         'Flat': 'flat'
     }.get(direction, 'the direction is unknown')
 
-def getSgvDirSpeech(data):
+def getSgvSpeech(data, withDirection=True):
     sgv = data[0].get('sgv')
     if sgv is None:
         return ''
@@ -80,7 +87,45 @@ def getSgvDirSpeech(data):
     if direction is None:
         return ''
 
-    return 'Sensor glucose value is currently ' + str(sgv) + ' and ' + CGMdirectionToNL(direction) + '.'
+    speech = 'Sensor glucose value is currently ' + str(sgv)
+    if withDirection == True:
+        speech = speech + ' and ' + CGMdirectionToNL(direction) + '.'
+    else:
+        speech = speech + '.'
+
+    return speech
+
+def getSgvOutliers(data):
+    minSgv = {'value': 0, 'date': datetime.datetime.now()}
+    maxSgv = {'value': 0, 'date': datetime.datetime.now()}
+
+    for d in data:
+        tmpSvg = d.get('sgv')
+        tmpDate = d.get('dateString')
+        if tmpSvg is None or tmpDate is None:
+            return ''
+        if tmpSvg > maxSgv['value']:
+            maxSgv['value'] = tmpSvg
+            maxSgv['date'] = parse(tmpDate)
+        if tmpSvg < minSgv['value'] or minSgv['value'] == 0:
+            minSgv['value'] = tmpSvg
+            maxSgv['date'] = parse(tmpDate)
+
+    return (minSgv, maxSgv)
+
+def getSgvDaySpeech(day, minSgv, maxSgv):
+    return day + ', the lowest sensor glucose value was ' +\
+                str(minSgv['value']) + ' at ' + minSgv['date'].strftime('%I:%M%p') +\
+                ', and the highest was ' + str(maxSgv['value']) +\
+                ' at ' + maxSgv['date'].strftime('%I:%M%p') + '.'
+
+def getSgvTodaySpeech(data):
+    minSgv, maxSgv = getSgvOutliers(data)
+    return getSgvDaySpeech('Today', minSgv, maxSgv)
+
+def getSgvYesterdaySpeech(data):
+    minSgv, maxSgv = getSgvOutliers(data)
+    return getSgvDaySpeech('Yesterday', minSgv, maxSgv)
 
 def getMbgSpeech(data):
     mbg = data[0].get('mbg')
@@ -100,10 +145,18 @@ def makeWebhookResult(data, entity):
     if len(data) == 0:
         return {}
 
-    speech = {
-        'sgvDir': getSgvDirSpeech(data),
-        'mbg': getMbgSpeech(data)
-    }.get(entity, '')
+    speech = ''
+    if entity == 'sgv':
+        speech = getSgvSpeech(data, False)
+    elif entity == 'sgvDir':
+        speech = getSgvSpeech(data, True)
+    elif entity == 'sgvToday':
+        speech = getSgvTodaySpeech(data)
+    elif entity == 'sgvYesterday':
+        speech = getSgvYesterdaySpeech(data)
+    elif entity == 'mbg':
+        speech = getMbgSpeech(data)
+
     if speech == '':
         return {}
 
