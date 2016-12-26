@@ -17,10 +17,11 @@ Requests need to contain a valid CGM URL and an entity to return.  There are mul
 
 | entity | purpose | sample response |
 |--------|---------|-----------------|
-|sgv|Curren sensor glucose value|"Sensor glucose value is currently 201."|
+|sgv|Current sensor glucose value|"Sensor glucose value is currently 201."|
 |sgvDir|Current sensor glucose value and direction|"Sensor glucose value is currently 201 and the direction is unknown."|
 |sgvToday|Sensor glucose value trends for today|"Today, the lowest sensor glucose value was 174 at 10:40PM, and the highest was 295 at 12:30AM."|
 |sgvYesterday|Sensor glucose value trends for yesterday|"Yesterday, the lowest sensor glucose value was 175 at 12:42PM, and the highest was 316 at 06:00PM."|
+|mbg|Last mean blood glucose value|"Mean blood glucose value was 188 on December 26 at 09:50AM."|
 
 Sample request:
 ```json
